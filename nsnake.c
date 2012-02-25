@@ -46,6 +46,7 @@ void readInput(struct body *snake)
 	ch = getch(); // get key pressed
 	if(ch == KEY_UP || ch == 'w')
 	{
+		// The snake cannot move in the opposite direction
 		if(snake[0].nextDir != DOWN)
 		{
 			snake[0].nextDir = UP;
@@ -78,10 +79,23 @@ void readInput(struct body *snake)
 void plantFood(int *outx, int *outy, struct body *snake)
 {
 	// Get a random value for food
-	// TODO: Ensure that it avoids the snake path
-	int screenx, screeny;
-	*outx = rand() % 10 + 1;
-	*outy = rand() % 10 + 1;
+	//int screenx, screeny;	// Variables to use if a max screen size is defined
+	for(int i = 0; i < snakelength; i++)
+	{
+		*outx = rand() % 10;
+		*outy = rand() % 10;
+
+		// If the food is hitting the snake
+		if(*outx == snake[i].x && *outy == snake[i].y)
+		{
+			// Reset the counter
+			i = 0;
+		} else {
+			// If the food is in an empty square, exit
+			break;
+		}
+	}
+	
 }
 
 int main(int argc, char **argv)
