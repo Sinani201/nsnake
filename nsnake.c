@@ -27,8 +27,6 @@ void redraw(struct body *snake,int foodx, int foody)
 {
 	erase();	// Clears the screen
 
-	//mvaddch(0,0,(char)
-
 	mvaddch(foody,foodx,'*');	// Draw food
 
 	mvaddch(snake[0].y,snake[0].x,'@');	// Draw the snake head
@@ -93,14 +91,10 @@ int main(int argc, char **argv)
 	cbreak();
 	nodelay(stdscr,true);
 	srand(time(NULL));
-	//struct body * snake;
 
 	struct body * snake;
 	snake = (struct body *) calloc(10,sizeof(struct body));
 
-	//snake = calloc(10,sizeof(Body));
-	//time(&fpstick);
-	//time(&speedtick);
 	fpstick = clock();
 	speedtick = clock();
 	int speed = 5;
@@ -113,9 +107,7 @@ int main(int argc, char **argv)
 	snake[0].y = 5;
 	snake[0].nextDir = 3;
 
-	//plantFood(&foodx, &foody, snake);
-	foodx = 3;
-	foody = 3;
+	plantFood(&foodx, &foody, snake);
 	bool gameover = false;
 
 	while(1==1)
@@ -127,7 +119,7 @@ int main(int argc, char **argv)
 
 		// speed is determined by the timer
 		// if it has been fulfulled, move the snake
-		if(now-speedtick > CLOCKS_PER_SEC / snakelength * 1.5)
+		if(now-speedtick > CLOCKS_PER_SEC / (snakelength+3) * 1.5)
 		{
 			for(i=snakelength-1; i>=0; i--)
 			{
@@ -197,7 +189,6 @@ int main(int argc, char **argv)
 				plantFood(&foodx,&foody,snake);
 			}
 
-			//time(&speedtick);
 			speedtick = clock();
 		}
 
@@ -205,7 +196,6 @@ int main(int argc, char **argv)
 		if(now-fpstick > 1 / FPS)
 		{
 			redraw(snake,foodx,foody);
-			//time(&fpstick);
 			fpstick = clock();
 		}
 
