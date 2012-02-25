@@ -19,6 +19,7 @@ struct body
 	int nextDir; 
 	int x;
 	int y;
+	char sprite;
 };
 
 int i;
@@ -31,9 +32,9 @@ void redraw(struct body *snake,int foodx, int foody)
 
 	mvaddch(snake[0].y,snake[0].x,'@');	// Draw the snake head
 
-	for(int i = 1; i < snakelength; i++)
+	for(int i = 0; i < snakelength; i++)
 	{
-		mvaddch(snake[i].y,snake[i].x,'#');
+		mvaddch(snake[i].y,snake[i].x,snake[i].sprite);
 	}
 
 	refresh();
@@ -106,6 +107,7 @@ int main(int argc, char **argv)
 	snake[0].x = 5;
 	snake[0].y = 5;
 	snake[0].nextDir = 3;
+	snake[0].sprite = '@';
 
 	plantFood(&foodx, &foody, snake);
 	bool gameover = false;
@@ -185,6 +187,7 @@ int main(int argc, char **argv)
 					break;
 				}
 				snake[snakelength].nextDir = snake[snakelength-1].nextDir;
+				snake[snakelength].sprite = '#';
 				snakelength++;
 				plantFood(&foodx,&foody,snake);
 			}
