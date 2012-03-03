@@ -49,6 +49,7 @@ void drawWalls()
 		mvaddch(i,0,'|');
 		mvaddch(i,screenw,'|');	
 	}
+	mvprintw(screenh+1,0,"Score: %d",snakelength);
 }
 
 void redraw(struct body *snake,int foodx, int foody)
@@ -133,8 +134,8 @@ int main(int argc, char **argv)
 	nodelay(stdscr,true);
 	srand(time(NULL));
 
-	screenw = 11;
-	screenh = 11;
+	screenw = 16;
+	screenh = 16;
 
 	// Command line arguments
 	if(argc == 2 && strcmp(argv[1], "-w") == 0)
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
 	plantFood(&foodx, &foody, snake);
 	bool gameover = false;
 
-	while(1==1)
+	while(!gameover)
 	{
 		//time(&now);
 		now = clock();
@@ -204,9 +205,9 @@ int main(int argc, char **argv)
 			}
 
 			// Count again to see if the snake has hit its tail
-			for(i = 1; i < snakelength; i++)
+			for(int i = 1; i < snakelength; i++)
 			{
-				if(snake[0].x == snake[0].x && snake[0].y == snake[0].y)
+				if(snake[0].x == snake[i].x && snake[0].y == snake[i].y)
 				{
 					gameover = true;
 				}
@@ -280,13 +281,21 @@ int main(int argc, char **argv)
 			redraw(snake,foodx,foody);
 			fpstick = clock();
 		//}
-
-		// Is the game over?
-		if(gameover)
-		{
-			break;
-		}
 	}
+
+		// Make the highscore file and modify it
+	FILE * highscores = fopen("~/.nsnake-highscores","rw");
+	if(!highscores)
+	{
+		system("touch ~/.nsnake-highscores");
+		highscores = fopen("~/.nsnake-highscores","rw");
+	}
+
+	fprintf(highscores,"%d\n",snakelength);
+//	system("echo %d >> ~/.nsnake-highscores",snakelength);
+	fclose(highscores);
+
+
 	free(snake);
 	return(0);
 }
