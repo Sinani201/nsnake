@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <ncurses.h>
 
@@ -13,10 +14,17 @@
 
 clock_t speedtick,now,fpstick;
 int snakelength;
+bool walls;
+int screenw;
+int screenh;
 
 struct body
 {
 	int nextDir; 
+	// Current dir is used to ensure
+	// that the snake head doesn't run
+	// into itself
+	int currentDir;
 	int x;
 	int y;
 	char sprite;
@@ -24,13 +32,32 @@ struct body
 
 int i;
 
+void drawWalls()
+{
+	mvaddch(0,0,'+');
+	mvaddch(screenh,0,'+');
+	mvaddch(0,screenw,'+');
+	mvaddch(screenh,screenw,'+');
+
+	for(int i=1; i < screenw; i++)
+	{
+		mvaddch(0,i,'-');
+		mvaddch(screenh,i,'-');
+	}
+	for(int i=1; i < screenh; i++)
+	{
+		mvaddch(i,0,'|');
+		mvaddch(i,screenw,'|');	
+	}
+}
+
 void redraw(struct body *snake,int foodx, int foody)
 {
 	erase();	// Clears the screen
-
+	
+	drawWalls();
+	
 	mvaddch(foody,foodx,'*');	// Draw food
-
-	mvaddch(snake[0].y,snake[0].x,'@');	// Draw the snake head
 
 	for(int i = 0; i < snakelength; i++)
 	{
@@ -47,29 +74,28 @@ void readInput(struct body *snake)
 	if(ch == KEY_UP || ch == 'w')
 	{
 		// The snake cannot move in the opposite direction
-		if(snake[0].nextDir != DOWN)
+		if(snake[0].currentDir != DOWN)
 		{
 			snake[0].nextDir = UP;
 		}
 	}
 	else if(ch == KEY_DOWN || ch == 's')
 	{
-		if(snake[0].nextDir != UP)
+		if(snake[0].currentDir != UP)
 		{
 			snake[0].nextDir = DOWN;
-
 		}
 	}
 	else if(ch == KEY_LEFT || ch == 'a')
 	{
-		if(snake[0].nextDir != RIGHT)
+		if(snake[0].currentDir != RIGHT)
 		{
 			snake[0].nextDir = LEFT;
 		}
 	}
 	else if(ch == KEY_RIGHT || ch == 'd')
 	{
-		if(snake[0].nextDir != LEFT)
+		if(snake[0].currentDir != LEFT)
 		{
 			snake[0].nextDir = RIGHT;
 		}
@@ -82,8 +108,8 @@ void plantFood(int *outx, int *outy, struct body *snake)
 	//int screenx, screeny;	// Variables to use if a max screen size is defined
 	for(int i = 0; i < snakelength; i++)
 	{
-		*outx = rand() % 10;
-		*outy = rand() % 10;
+		*outx = (rand() % (screenw-1)) + 1;
+		*outy = (rand() % (screenh-1)) + 1;
 
 		// If the food is hitting the snake
 		if(*outx == snake[i].x && *outy == snake[i].y)
@@ -107,8 +133,18 @@ int main(int argc, char **argv)
 	nodelay(stdscr,true);
 	srand(time(NULL));
 
+	screenw = 11;
+	screenh = 11;
+
+	// Command line arguments
+	if(argc == 2 && strcmp(argv[1], "-w") == 0)
+	{
+		// Enable walls
+		walls = true;
+	}
+
 	struct body * snake;
-	snake = (struct body *) calloc(10,sizeof(struct body));
+	snake = (struct body *) calloc(MAXSNAKE,sizeof(struct body));
 
 	fpstick = clock();
 	speedtick = clock();
@@ -157,6 +193,8 @@ int main(int argc, char **argv)
 					snake[i].x++;
 					break;
 				}
+				
+				snake[i].currentDir = snake[i].nextDir;
 
 				if(i != 0)
 				{
@@ -168,9 +206,36 @@ int main(int argc, char **argv)
 			// Count again to see if the snake has hit its tail
 			for(i = 1; i < snakelength; i++)
 			{
-				if(snake[i].x == snake[0].x && snake[i].y == snake[0].y)
+				if(snake[0].x == snake[0].x && snake[0].y == snake[0].y)
 				{
 					gameover = true;
+				}
+			}
+
+			if(walls)
+			{
+				if(snake[0].x == 0 || snake[0].x == screenw
+					|| snake[0].y == 0 || snake[0].y == screenh)
+				{
+					gameover = true;
+				}
+			} else {
+				for(int i = 0; i < snakelength; i++)
+				{
+					if(snake[i].x == 0)
+					{
+						snake[i].x = screenw - 1;
+					} else if(snake[i].x == screenw)
+					{
+						snake[i].x = 1;
+					}
+					if(snake[i].y == 0)
+					{
+						snake[i].y = screenh - 1;
+					} else if(snake[i].y == screenh)
+					{
+						snake[i].y = 1;
+					}
 				}
 			}
 			
@@ -210,11 +275,11 @@ int main(int argc, char **argv)
 		}
 
 		// handle timer loops
-		if(now-fpstick > 1 / FPS)
-		{
+		//if(now-fpstick > CLOCKS_PER_SEC / FPS)
+		//{
 			redraw(snake,foodx,foody);
 			fpstick = clock();
-		}
+		//}
 
 		// Is the game over?
 		if(gameover)
@@ -223,4 +288,5 @@ int main(int argc, char **argv)
 		}
 	}
 	free(snake);
+	return(0);
 }
