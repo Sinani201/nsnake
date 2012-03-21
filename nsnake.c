@@ -49,7 +49,6 @@ void drawWalls()
 		mvaddch(i,0,'|');
 		mvaddch(i,screenw,'|');	
 	}
-	mvprintw(screenh+1,0,"Score: %d",snakelength);
 }
 
 void redraw(struct body *snake,int foodx, int foody)
@@ -64,11 +63,13 @@ void redraw(struct body *snake,int foodx, int foody)
 	{
 		mvaddch(snake[i].y,snake[i].x,snake[i].sprite);
 	}
+	mvprintw(screenh+1,0,"Score: %d",snakelength);
+	move(screenh+2,0);
 
 	refresh();
 }
 
-void readInput(struct body *snake)
+bool readInput(struct body *snake)
 {
 	int ch;
 	ch = getch(); // get key pressed
@@ -101,6 +102,11 @@ void readInput(struct body *snake)
 			snake[0].nextDir = RIGHT;
 		}
 	}
+	else if(ch == 'q')
+	{
+		return false;
+	}
+	return true;
 }
 
 void plantFood(int *outx, int *outy, struct body *snake)
@@ -127,22 +133,51 @@ void plantFood(int *outx, int *outy, struct body *snake)
 
 int main(int argc, char **argv)
 {
+	screenw = 16;
+	screenh = 16;
+
+	// Command line arguments
+	if(argc >= 2)
+	{
+		for(int i = 1; i < argc; i++)
+		{
+			if(strcmp(argv[i], "-w") == 0)
+			{
+				// Enable walls
+				walls = true;
+			}
+			if(strcmp(argv[i], "-?") == 0 || strcmp(argv[i], "-?"))
+			{
+				printf("WASD to move\n");
+				printf("Use option -w to enable death walls\n");
+				return 0;
+			}
+			if(strcmp(argv[i], "-w") == 0)
+			{
+				i++;
+				if(atoi(argv[i]) > 5)
+				{
+					screenw = atoi(argv[i]);
+				}
+			}
+			if(strcmp(argv[i], "-h") == 0)
+			{
+				i++;
+				if(atoi(argv[i]) > 5)
+				{
+					screenh = atoi(argv[i]);
+				}
+			}
+		}
+		
+	}
+
 	// Curses initialization and stuff
 	initscr();
 	nonl();
 	cbreak();
 	nodelay(stdscr,true);
 	srand(time(NULL));
-
-	screenw = 16;
-	screenh = 16;
-
-	// Command line arguments
-	if(argc == 2 && strcmp(argv[1], "-w") == 0)
-	{
-		// Enable walls
-		walls = true;
-	}
 
 	struct body * snake;
 	snake = (struct body *) calloc(MAXSNAKE,sizeof(struct body));
@@ -168,7 +203,10 @@ int main(int argc, char **argv)
 		//time(&now);
 		now = clock();
 
-		readInput(snake);
+		if(!readInput(snake));
+		{
+			//gameover = true;
+		}
 
 		// speed is determined by the timer
 		// if it has been fulfulled, move the snake
@@ -209,6 +247,7 @@ int main(int argc, char **argv)
 			{
 				if(snake[0].x == snake[i].x && snake[0].y == snake[i].y)
 				{
+					snake[0].sprite = '!';
 					gameover = true;
 				}
 			}
@@ -283,19 +322,18 @@ int main(int argc, char **argv)
 		//}
 	}
 
-		// Make the highscore file and modify it
-	FILE * highscores = fopen("~/.nsnake-highscores","rw");
+	// Make the highscore file and modify it
+	FILE * highscores;
+	highscores = fopen("~/.nsnake-highscores","r+");
 	if(!highscores)
 	{
 		system("touch ~/.nsnake-highscores");
-		highscores = fopen("~/.nsnake-highscores","rw");
+		highscores = fopen("~/.nsnake-highscores","r+");
 	}
 
-	fprintf(highscores,"%d\n",snakelength);
-//	system("echo %d >> ~/.nsnake-highscores",snakelength);
+	fprintf(highscores,"blahblah\n",snakelength);
 	fclose(highscores);
 
-
 	free(snake);
-	return(0);
+	return 0;
 }
