@@ -12,6 +12,9 @@
 #define LEFT 2
 #define RIGHT 3
 
+#define HIGHSCORE_FILENAME ".nsnake-highscores"
+#define LINE_MAX 15
+
 clock_t speedtick,now,fpstick;
 int snakelength;
 bool walls;
@@ -29,7 +32,6 @@ struct body
 	int y;
 	char sprite;
 };
-
 int i;
 
 void drawWalls()
@@ -324,16 +326,54 @@ int main(int argc, char **argv)
 
 	// Make the highscore file and modify it
 	FILE * highscores;
-	highscores = fopen("~/.nsnake-highscores","r+");
+
+	// We need to get the string for the user's home directory
+	char filename[strlen(getenv("HOME"))+strlen(HIGHSCORE_FILENAME)+1];
+	strcpy(filename,getenv("HOME"));
+	strcat(filename,"/");
+	strcat(filename,HIGHSCORE_FILENAME);
+
+	highscores = fopen(filename,"r+");
 	if(!highscores)
 	{
+		// If there aren't any highscores, create the file and write in the score
 		system("touch ~/.nsnake-highscores");
-		highscores = fopen("~/.nsnake-highscores","r+");
+		highscores = fopen(filename,"r+");
+		fprintf(highscores,"%-15s%d\n",getenv("USER"),snakelength);
+	} else {
+		int c;
+		char scorecheck[4];
+		bool wroteScores;
+		
+		// cycle through the file and order the highscores
+		do
+		{
+			c = getc(highscores);
+			fseek(highscores,15,SEEK_CUR);
+			fgets(scorecheck,5,highscores);
+			// Check if the high score entry is greater
+			// than the one we have
+			if(atoi(scorecheck) < snakelength)
+			{
+				// Go one line up
+				fseek(highscores,-15-strlen(scorecheck),SEEK_CUR);
+				// Write the new highscore
+				fprintf(highscores,"%-15s%d\n",getenv("USER"),snakelength);
+				wroteScores = true;
+				break;
+			}
+		} while(c != EOF);
+		if(!wroteScores)
+		{
+			fprintf(highscores,"%-15s%d\n",getenv("USER"),snakelength);
+		}
 	}
-
-	fprintf(highscores,"blahblah\n",snakelength);
+	
 	fclose(highscores);
-
 	free(snake);
+	endwin();
+
+	printf("Highscores written!");
+
 	return 0;
 }
