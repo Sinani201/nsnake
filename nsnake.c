@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 		//time(&now);
 		now = clock();
 
-		if(!readInput(snake));
+		if(!readInput(snake))
 		{
 			//gameover = true;
 		}
